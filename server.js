@@ -5,7 +5,7 @@ var morgan = require('morgan');
 var mongoose = require('mongoose');
 var jwt = require('jsonwebtoken');
 var config = require('./config');
-var User = require('./models/user');
+var User = require('./models/user').User;
 
 mongoose.connect(config.database);
 app.set('superSecret', config.secret);
@@ -15,33 +15,36 @@ app.use(bodyParser.json());
 
 app.use(morgan('dev'));
 
-app.get('/', function (req, res) {
-    res.send('Hello world!')
-})
+app.post('/setup', function (req, res) {
+    var email = req.body.email;
+    var password = req.body.password;
+    var userName = req.body.userName;
+    var user = new User({userName: userName, email: email, password: password, });
 
-app.get('/setup', function (req, res) {
-    var nick = new User({
-        userName: 'Nick asd',
-        email: 'eblan@ad.dd',
-        password: 'password',
-    })
-
-    nick.save(function (err) {
-        if(err) {
-            throw err;
+    User.findOne({email: email}, function (err, usr) {
+        if(!usr) {
+            user.save(function (err) {
+                if (err) {
+                    res.json({success: false});
+                } else {
+                    res.json({success:true});
+                }
+            })
+        } else {
+            res.json({success: false, message: 'Email exist'});
         }
-
-        console.log('User saved!');
-        res.json({success: true});
-    })
+    });
 });
 
 var apiRoutes = express.Router();
 
 // Route to authenticate user
 apiRoutes.post('/authenticate', function (req, res) {
+    var email = req.body.email;
+    var password = req.body.password;
+
     User.findOne({
-        userName: req.body.userName
+        email: email
     }, function (err, user) {
         if (err) throw err;
         if (!user) {
@@ -50,7 +53,7 @@ apiRoutes.post('/authenticate', function (req, res) {
                 message: 'Authenticate failed. User not found.'
             })
         } else if (user) {
-            if (user.password != req.body.password) {
+            if (!user.checkPassword(password)) {
                 res.json({
                     success: false,
                     message: 'Authenticate failed. Wrong password.'

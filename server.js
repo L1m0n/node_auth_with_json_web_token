@@ -13,9 +13,19 @@ app.set('superSecret', config.secret);
 app.use(bodyParser.urlencoded({extended: false}))
 app.use(bodyParser.json());
 
+// Headers
+app.use(function (req, res, next) {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+    res.setHeader('Access-Control-Allow-Credentials', true);
+    next();
+});
+
 app.use(morgan('dev'));
 
-app.post('/setup', function (req, res) {
+//signup route
+app.post('/signup', function (req, res) {
     var email = req.body.email;
     var password = req.body.password;
     var userName = req.body.userName;
@@ -27,7 +37,17 @@ app.post('/setup', function (req, res) {
                 if (err) {
                     res.json({success: false});
                 } else {
-                    res.json({success:true});
+                    var token = jwt.sign(user, app.get('superSecret'), {
+                        expiresIn: '24h'
+                    })
+                    res.json({
+                        success:true,
+                        user: {
+                            token: token,
+                            userName: userName,
+                            email: email
+                        }
+                    });
                 }
             })
         } else {
@@ -99,17 +119,7 @@ apiRoutes.use(function (req, res, next) {
     
 })
 
-apiRoutes.get('/', function (req, res) {
-    res.json({message: "Welcome to to the API!"})
-})
-
-apiRoutes.get('/users', function (req, res) {
-    User.find({}, function (err, users) {
-        res.json(users);
-    })
-})
-
 app.use('/api', apiRoutes);
 
-app.listen(3000);
+app.listen(3001);
 

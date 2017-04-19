@@ -24,6 +24,8 @@ app.use(function (req, res, next) {
 
 app.use(morgan('dev'));
 
+var apiRoutes = express.Router();
+
 //signup route
 app.post('/signup', function (req, res) {
     var email = req.body.email;
@@ -56,10 +58,8 @@ app.post('/signup', function (req, res) {
     });
 });
 
-var apiRoutes = express.Router();
-
 // Route to authenticate user
-apiRoutes.post('/authenticate', function (req, res) {
+app.post('/login', function (req, res) {
     var email = req.body.email;
     var password = req.body.password;
 
@@ -84,10 +84,13 @@ apiRoutes.post('/authenticate', function (req, res) {
                 })
 
                 res.json({
-                    success: true,
-                    message: 'Enjoy your token!',
-                    token: token
-                })
+                    success:true,
+                    user: {
+                        token: token,
+                        userName: user.userName,
+                        email: email
+                    }
+                });
             }
         }
     })

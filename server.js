@@ -6,9 +6,20 @@ var mongoose = require('mongoose');
 var jwt = require('jsonwebtoken');
 var config = require('./config');
 var User = require('./models/user').User;
+var fs = require('fs');
+const path = require('path');
+const public = __dirname + "/build/";
+
+app.set('port', (process.env.PORT || 5000));
+app.use(express.static(public));
 
 mongoose.connect(config.database);
 app.set('superSecret', config.secret);
+
+// Serve static
+app.get('*', function(req, res) {
+    res.sendFile(path.join(public + "index.html"));
+});
 
 app.use(bodyParser.urlencoded({extended: false}))
 app.use(bodyParser.json());
@@ -124,5 +135,5 @@ apiRoutes.use(function (req, res, next) {
 
 app.use('/api', apiRoutes);
 
-app.listen(3001);
+app.listen(app.get('port'));
 

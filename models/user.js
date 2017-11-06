@@ -25,11 +25,11 @@ var schema = new Schema({
         type: Date,
         default: Date.now
     }
-})
+});
 
 schema.methods.encryptPassword = function (password) {
     return crypto.createHmac('sha1', this.salt).update(password).digest('hex');
-}
+};
 
 schema.virtual('password')
     .set(function (password) {
@@ -43,6 +43,6 @@ schema.virtual('password')
 
 schema.methods.checkPassword = function (password) {
     return this.encryptPassword(password) === this.hashedPassword;
-}
+};
 
 exports.User = mongoose.model('User', schema);

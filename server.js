@@ -13,7 +13,7 @@ const public = __dirname + "/build/";
 app.set('port', (process.env.PORT || 5000));
 app.use(express.static(public));
 
-mongoose.connect(config.database);
+mongoose.connect(config.database, {useMongoClient: true});
 app.set('superSecret', config.secret);
 
 // Serve static
@@ -48,11 +48,12 @@ app.post('/signup', function (req, res) {
         if(!usr) {
             user.save(function (err) {
                 if (err) {
+                    console.log(err);
                     res.json({success: false});
                 } else {
                     var token = jwt.sign(user, app.get('superSecret'), {
                         expiresIn: '24h'
-                    })
+                    });
                     res.json({
                         success:true,
                         user: {
@@ -135,5 +136,5 @@ apiRoutes.use(function (req, res, next) {
 
 app.use('/api', apiRoutes);
 
-app.listen(app.get('port'));
+app.listen(8081);
 
